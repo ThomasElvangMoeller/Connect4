@@ -10,6 +10,7 @@ using IdentityServer4.EntityFramework.Entities;
 using Microsoft.AspNetCore.Identity;
 using IdentityServer4.EntityFramework.Extensions;
 using Connect4.Extensions;
+using System.Collections.Generic;
 
 namespace Connect4.Data
 {
@@ -32,11 +33,12 @@ namespace Connect4.Data
             builder.Entity<Game>().Property(p => p.CardDrawPile).HasConversion(ConversionExtension.DbIntListConverter());
             builder.Entity<Game>().Property(p => p.CardDiscardPile).HasConversion(ConversionExtension.DbIntListConverter());
             builder.Entity<Game>().Property(p => p.GameBoard).HasConversion(ConversionExtension.JsonConverter<BoardTile[,]>());
+            builder.Entity<Game>().Property(p => p.PlayerStates).HasConversion(ConversionExtension.JsonConverter<Dictionary<string,PlayerGameState>>());
 
             //PlayerGameState
-            builder.Entity<PlayerGameState>().HasOne<Game>(p => p.Game).WithMany(prop => prop.PlayerStates);
-            builder.Entity<PlayerGameState>().HasOne<ApplicationUser>(p => p.Player);
-            builder.Entity<PlayerGameState>().Property(p => p.Cards).HasConversion(ConversionExtension.DbIntListConverter());
+            //builder.Entity<PlayerGameState>().HasOne<Game>(p => p.Game).WithMany(prop => prop.PlayerStates);
+            //builder.Entity<PlayerGameState>().HasOne<ApplicationUser>(p => p.Player);
+            //builder.Entity<PlayerGameState>().Property(p => p.Cards).HasConversion(ConversionExtension.DbIntListConverter());
 
             //ApplicationUser aka player
             builder.Entity<ApplicationUser>().HasMany<Game>(p => p.CurrentGames);

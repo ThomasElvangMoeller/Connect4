@@ -47,9 +47,9 @@ namespace Connect4
                 {
                     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
                     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-                }).AddJwtBearer(options =>
+                }).AddJwtBearer("Bearer", options =>
                 {
-
+                    options.Validate();
                 });
 
             services.AddControllersWithViews();
@@ -105,7 +105,6 @@ namespace Connect4
             app.UseRouting();
 
             app.UseAuthentication();
-            app.UseIdentityServer();
             app.UseAuthorization();
             app.UseEndpoints(endpoints =>
             {
@@ -114,6 +113,7 @@ namespace Connect4
                     pattern: "{controller}/{action=Index}/{id?}");
                 endpoints.MapRazorPages();
                 endpoints.MapHub<ChatHub>("/chat");
+                endpoints.MapHub<GameHub>("/game");
             });
 
             app.UseSpa(spa =>

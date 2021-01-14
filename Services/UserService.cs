@@ -46,7 +46,7 @@ namespace Connect4.Services
         }
         public ApplicationUser GetById(Guid userId)
         {
-            return _context.Users.SingleOrDefault(q => q.Id == userId);
+            return _context.Users.FirstOrDefault(q => q.Id == userId);
         }
 
         public async Task<UserResult> CreateUserAsync(string username, string password)

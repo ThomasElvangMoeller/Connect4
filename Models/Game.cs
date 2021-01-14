@@ -9,21 +9,41 @@ namespace Connect4.Models
 {
     public class Game
     {
-        [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [Key, DatabaseGenerated(DatabaseGeneratedOption.None)]
         public Guid Id { get; set; }
         public List<ApplicationUser> Players { get; set; }
-        public List<PlayerGameState> PlayerStates { get; set; }
+        public Dictionary<string, PlayerGameState> PlayerStates { get; set; }
         public BoardTile[,] GameBoard { get; set; }
         public List<int> CardDrawPile { get; set; }
         public List<int> CardDiscardPile { get; set; }
 
         public Game() { }
 
-        public Game(int width, int height)
+        public Game(GameSettings settings, Dictionary<string, PlayerColor> playersAndColors)
         {
-            this.CreateBoard(width, height);
+            this.Id = Guid.NewGuid();
+            int seed = string.IsNullOrWhiteSpace(settings.seed) ? -1 : settings.seed.GetHashCode();
+            this.CreateBoard(settings.BoardWidth, settings.BoardHeight, seed);
+            this.CardDrawPile = settings.Cards;
+            this.CardDrawPile.Shuffle();
+            this.CardDiscardPile = new List<int>(CardDrawPile.Count + 1);
+            this.PlayerStates = new Dictionary<string, PlayerGameState>();
+            foreach (KeyValuePair<string, PlayerColor> item in playersAndColors)
+            {
+                PlayerGameState state = new PlayerGameState() { Cards = CreateHand(settings.PlayerCardHoldAmount), Color = item.Value, Player = item.Key, PlayerPieces = settings.PlayerPiecesAmount };
+                this.PlayerStates.Add(item.Key, state);
+            }
         }
+        private List<int> CreateHand(int handSize)
+        {
+            List<int> hand = new List<int>();
+            for (int i = 0; i < handSize; i++)
+            {
+                hand.Add(this.CardDrawPile.Last());
+            }
+            return hand;
 
+        }
         private void CreateBoard(int width, int height, int seed = -1)
         {
             GameBoard = new BoardTile[width, height];
