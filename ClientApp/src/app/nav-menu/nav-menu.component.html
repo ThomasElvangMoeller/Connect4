@@ -19,7 +19,7 @@
         class="navbar-collapse collapse d-sm-inline-flex flex-sm-row-reverse"
         [ngClass]="{ show: isExpanded }"
       >
-        <app-login-menu></app-login-menu>
+        <!-- <app-login-menu></app-login-menu> -->
         <ul class="navbar-nav flex-grow">
           <li
             class="nav-item"
@@ -34,8 +34,8 @@
             >
           </li>
           <li class="nav-item" [routerLinkActive]="['link-active']">
-            <a class="nav-link text-dark" [routerLink]="['/fetch-data']"
-              >Fetch data</a
+            <a class="nav-link text-dark" [routerLink]="['/gameplay']"
+              >Game</a
             >
           </li>
         </ul>
