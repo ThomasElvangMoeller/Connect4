@@ -11,11 +11,35 @@ namespace Connect4.Models
     {
         [Key, DatabaseGenerated(DatabaseGeneratedOption.None)]
         public Guid Id { get; set; }
-        public List<ApplicationUser> Players { get; set; }
-        public Dictionary<string, PlayerGameState> PlayerStates { get; set; }
+
+        public PlayerGameState[] Players { get; set; } = new PlayerGameState[4];
+        public PlayerGameState PlayerWhite
+        {
+            get => Players[(int)PlayerColor.White];
+            set => Players[(int)PlayerColor.White] = value;
+        }
+        public PlayerGameState PlayerBlack
+        {
+            get => Players[(int)PlayerColor.Black];
+            set => Players[(int)PlayerColor.Black] = value;
+        }
+        public PlayerGameState PlayerGrey
+        {
+            get => Players[(int)PlayerColor.Grey];
+            set => Players[(int)PlayerColor.Grey] = value;
+        }
+        public PlayerGameState PlayerRed
+        {
+            get => Players[(int)PlayerColor.Red];
+            set => Players[(int)PlayerColor.Red] = value;
+        }
         public BoardTile[,] GameBoard { get; set; }
-        public List<int> CardDrawPile { get; set; }
-        public List<int> CardDiscardPile { get; set; }
+        public Stack<int> CardDrawPile { get; set; }
+        public Stack<int> CardDiscardPile { get; set; }
+        public int CurrentPlayerTurnIndex { get; set; }
+
+        private int gameBoardLengthX;
+        private int gameBoardLengthY;
 
         public Game() { }
 
@@ -24,26 +48,257 @@ namespace Connect4.Models
             this.Id = Guid.NewGuid();
             int seed = string.IsNullOrWhiteSpace(settings.seed) ? -1 : settings.seed.GetHashCode();
             this.CreateBoard(settings.BoardWidth, settings.BoardHeight, seed);
+            this.gameBoardLengthX = GameBoard.GetLength(0);
+            this.gameBoardLengthY = GameBoard.GetLength(1);
             this.CardDrawPile = settings.Cards;
             this.CardDrawPile.Shuffle();
-            this.CardDiscardPile = new List<int>(CardDrawPile.Count + 1);
-            this.PlayerStates = new Dictionary<string, PlayerGameState>();
+            this.CardDiscardPile = new Stack<int>(CardDrawPile.Count + 1);
             foreach (KeyValuePair<string, PlayerColor> item in playersAndColors)
             {
                 PlayerGameState state = new PlayerGameState() { Cards = CreateHand(settings.PlayerCardHoldAmount), Color = item.Value, Player = item.Key, PlayerPieces = settings.PlayerPiecesAmount };
-                this.PlayerStates.Add(item.Key, state);
+                this.Players[(int)state.Color] = state;
             }
         }
+
+        /// <summary>
+        /// If the player has no pieces on hand, use <see cref="PlacePieceFromBoard(string, int, int, int, int)"/>
+        /// <para>Places the specified players piece at GameBoard[<paramref name="boardX"/>, <paramref name="boardY"/>]</para>
+        /// </summary>
+        /// <param name="player"></param>
+        /// <param name="boardX"></param>
+        /// <param name="boardY"></param>
+        /// <returns>A bool indicating if it was successful</returns>
+        /// <exception cref="IndexOutOfRangeException"></exception>
+        /// <remarks>Throws an exception if the given indexes are outside the board</remarks>
+        public bool PlacePieceIndex(PlayerGameState player, int boardX, int boardY)
+        {
+            if (boardX < 0 || this.GameBoard.GetLength(0) <= boardX)
+                throw new IndexOutOfRangeException("X Coord is outside the board");
+
+            if (boardY < 0 || this.GameBoard.GetLength(1) <= boardY)
+                throw new IndexOutOfRangeException("Y Coord is outside the board");
+
+            if (player != null)
+            {
+                this.GameBoard[boardX, boardY].PlayerPresence[player.Player]++;
+                player.PlayerPieces--;
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// If the player has more pieces on hand use <see cref="PlacePiece(string, int, int)"/>
+        /// <para> Takes the piece from GameBoard[<paramref name="boardTakeX"/>, <paramref name="boardTakeY"/>] and places it in board[<paramref name="boardPlaceX"/>, <paramref name="boardPlaceY"/>]</para>
+        /// </summary>
+        /// <param name="player"></param>
+        /// <param name="boardPlaceX"></param>
+        /// <param name="boardPlaceY"></param>
+        /// <param name="boardTakeX"></param>
+        /// <param name="boardTakeY"></param>
+        /// <returns>A bool indicating if it was successful</returns>
+        /// /// <exception cref="IndexOutOfRangeException"></exception>
+        /// <remarks>Throws an exception if the given indexes are outside the board</remarks>
+        public bool PlacePieceFromBoardIndex(PlayerGameState player, int boardPlaceX, int boardPlaceY, int boardTakeX, int boardTakeY)
+        {
+            if (boardTakeX < 0 || this.GameBoard.GetLength(0) <= boardTakeX)
+                throw new IndexOutOfRangeException("X Coord is outside the board");
+
+            if (boardTakeY < 0 || this.GameBoard.GetLength(1) <= boardTakeY)
+                throw new IndexOutOfRangeException("Y Coord is outside the board");
+
+            if (player != null && this.GameBoard[boardTakeX, boardTakeY].PlayerPresence.ContainsKey(player.Player))
+            {
+                this.GameBoard[boardTakeX, boardTakeY].PlayerPresence[player.Player]--;
+                player.PlayerPieces++;
+                return PlacePieceIndex(player, boardPlaceX, boardPlaceY);
+            }
+
+            return false;
+        }
+
+
+        /// <summary>
+        /// If the player has no pieces on hand use <see cref="PlacePieceFromBoardTileValue(string, int, int)"/>
+        /// <para>Finds the field where <paramref name="tileValue"/> is and places the given <paramref name="player"/>'s piece there</para>
+        /// </summary>
+        /// <param name="player"></param>
+        /// <param name="tileValue"></param>
+        /// <returns>A bool indicating if it was successful</returns>
+        public bool PlacePieceTileValue(PlayerGameState player, int tileValue)
+        {
+            if (TryFindTileValueIndex(tileValue, out int x, out int y))
+                return PlacePieceIndex(player, x, y);
+            return false;
+        }
+
+        /// <summary>
+        /// If the player has pieces on hand, use <see cref="PlacePieceTileValue(string, int)"/>
+        /// <para>Finds the field where <paramref name="tileValueTake"/> is and removes the given <paramref name="player"/>'s piece</para>
+        /// <para>Then it finds the field where <paramref name="tileValuePlace"/> is and places the given <paramref name="player"/>'s piece</para>
+        /// </summary>
+        /// <param name="player"></param>
+        /// <param name="tileValuePlace"></param>
+        /// <param name="tileValueTake"></param>
+        /// <returns>A bool indicating if it was successful</returns>
+        public bool PlacePieceFromBoardTileValue(PlayerGameState player, int tileValuePlace, int tileValueTake)
+        {
+            //int takeI = -1, takeJ = -1;
+            if (TryFindTileValueIndex(tileValueTake, out int takeI, out int takeJ))
+            {
+                if (TryFindTileValueIndex(tileValuePlace, out int i, out int j))
+                {
+                    return PlacePieceFromBoardIndex(player, i, j, takeI, takeJ);
+                }
+
+            }
+            return false;
+        }
+
+        public bool HasDrawAmount(int amount)
+        {
+            return CardDrawPile.Count >= amount;
+        }
+
+        public event EventHandler<DrawPileRefillEventArgs> CardDrawPileRefilled;
+
+        protected virtual void OnCardDrawPileRefilled(DrawPileRefillEventArgs e)
+        {
+            EventHandler<DrawPileRefillEventArgs> handler = CardDrawPileRefilled;
+            handler?.Invoke(this, e);
+        }
+
+        public void FillDrawPile()
+        {
+            Stack<int> discardCopy = this.CardDiscardPile;
+            foreach (int card in CardDrawPile)
+            {
+                discardCopy.Push(card);
+            }
+            this.CardDiscardPile.Clear();
+            discardCopy.Shuffle();
+            this.CardDrawPile = discardCopy;
+            OnCardDrawPileRefilled(new DrawPileRefillEventArgs() { DrawPile = discardCopy });
+        }
+
+        /// <summary>
+        /// Uses the given Cards to place a player piece. Placement is the sum of all the cards used. If there are no more pieces on hand it will take a piece from the tile with <paramref name="takeFromTileValue"/>'s value.
+        /// Takes the given cards and removes them from the player hand and puts them in the <see cref="CardDiscardPile"/> <strong>stack</strong>, it then refills from <see cref="CardDrawPile"/> <strong>stack</strong>. If there is not enough cards to refill the hand, the <em>draw pile</em> will be refilled from the <em>discard pile</em> and shuffled. This fires the <see cref="CardDrawPileRefilled"/> <strong>event</strong>
+        /// </summary>
+        /// <param name="player"></param>
+        /// <param name="cards"></param>
+        /// <param name="takeFromTileValue"></param>
+        /// <returns></returns>
+        public bool PlayerUseCards(string player, List<int> cards, int takeFromTileValue = -1)
+        {
+            bool success = false;
+            PlayerGameState state = Players.FirstOrDefault(q => q.Player == player);
+            if (state != null && state.Cards.All(p => cards.Contains(p))) //Check to make sure the player is actually holding the cards we are told they're holding
+            {
+                // First we place the players piece
+                int cardSum = cards.Sum();
+                if (state.PlayerPieces > 0)
+                {
+                    success = PlacePieceTileValue(state, cardSum);
+                }
+                else
+                {
+                    if (takeFromTileValue > 0)
+                        success = PlacePieceFromBoardTileValue(state, cardSum, takeFromTileValue);
+                }
+                if (success) // we only continue if we could place a piece
+                {
+                    // Second we discard the players cards
+                    foreach (int card in cards)
+                    {
+                        this.CardDiscardPile.Push(card);
+                    }
+                    state.Cards.RemoveAll(p => cards.Contains(p));
+
+                    //Third we check that we can draw more cards
+                    if (!HasDrawAmount(cards.Count))
+                    {
+                        FillDrawPile();
+                    }
+
+                    // Fourth we draw the amount of cards that were used
+                    for (int i = 0; i < cards.Count; i++)
+                    {
+                        state.Cards.Add(this.CardDrawPile.Pop());
+                    }
+                    state.Cards.Sort();
+                }
+
+            }
+            return success;
+        }
+
+        public Tile[] GetPossibleCardPlays(string player)
+        {
+            // This is a horrible and inefficient method, do not use too often
+            // TODO: See if this can be improved
+            ISet<Tile> possiblePlays = new HashSet<Tile>();
+            PlayerGameState state = Players.FirstOrDefault(q => q.Player == player);
+            if (state != null)
+            {
+                foreach (int card in state.GetAllCardSums())
+                {
+                    if (TryFindTileValueIndex(card, out int x, out int y))
+                    {
+                        possiblePlays.Add(new Tile(x, y, card));
+                    }
+                }
+            }
+            return possiblePlays.ToArray();
+        }
+
+
+        public bool TryFindTileValueIndex(int tileValue, out int x, out int y)
+        {
+            for (int i = 0; i < gameBoardLengthX; i++)
+                for (int j = 0; j < gameBoardLengthY; j++)
+                {
+                    if (this.GameBoard[i, j].TileValue == tileValue)
+                    {
+                        x = i;
+                        y = j;
+                        return true;
+                    }
+                }
+            x = -1;
+            y = -1;
+            return false;
+        }
+
+
+        // ---------------------------------------------- Private Methods ----------------------------------------------
+
+        /// <summary>
+        /// Draws the last cards from the drawpile and adds them to a list
+        /// <para>Amount drawn are dependent on <paramref name="handSize"/></para>
+        /// </summary>
+        /// <param name="handSize"></param>
+        /// <returns>
+        /// The drawn cards from the drawpile
+        /// </returns>
         private List<int> CreateHand(int handSize)
         {
             List<int> hand = new List<int>();
             for (int i = 0; i < handSize; i++)
             {
-                hand.Add(this.CardDrawPile.Last());
+                hand.Add(this.CardDrawPile.Pop());
             }
+            hand.Sort();
             return hand;
 
         }
+
+        /// <summary>
+        /// Creates a Board of <see cref="BoardTile"/>. If the seed is < 0 the board will have it's numbers randomly placed
+        /// </summary>
+        /// <param name="width"></param>
+        /// <param name="height"></param>
+        /// <param name="seed"></param>
         private void CreateBoard(int width, int height, int seed = -1)
         {
             GameBoard = new BoardTile[width, height];
@@ -57,13 +312,17 @@ namespace Connect4.Models
                 tileValues.Shuffle();
             }
             Queue<int> removeValues = new Queue<int>(tileValues);
-            for (int i = 0; i < GameBoard.GetUpperBound(0); i++)
-            {
-                for (int j = 0; j < GameBoard.GetUpperBound(1); j++)
+            for (int i = 0; i < gameBoardLengthX; i++)
+                for (int j = 0; j < gameBoardLengthY; j++)
                 {
                     GameBoard[i, j] = new BoardTile() { TileValue = removeValues.Dequeue() };
                 }
-            }
+
         }
+    }
+
+    public class DrawPileRefillEventArgs : EventArgs
+    {
+        public Stack<int> DrawPile { get; set; }
     }
 }

@@ -29,11 +29,11 @@ namespace Connect4.Data
         {
             base.OnModelCreating(builder);
             //Game
-            builder.Entity<Game>().HasMany<ApplicationUser>(p => p.Players);
+            //builder.Entity<Game>().HasMany<ApplicationUser>(p => p.Players);
             builder.Entity<Game>().Property(p => p.CardDrawPile).HasConversion(ConversionExtension.DbIntListConverter());
             builder.Entity<Game>().Property(p => p.CardDiscardPile).HasConversion(ConversionExtension.DbIntListConverter());
             builder.Entity<Game>().Property(p => p.GameBoard).HasConversion(ConversionExtension.JsonConverter<BoardTile[,]>());
-            builder.Entity<Game>().Property(p => p.PlayerStates).HasConversion(ConversionExtension.JsonConverter<Dictionary<string,PlayerGameState>>());
+            builder.Entity<Game>().Property(p => p.Players).HasConversion(ConversionExtension.JsonConverter<PlayerGameState[]>());
 
             //PlayerGameState
             //builder.Entity<PlayerGameState>().HasOne<Game>(p => p.Game).WithMany(prop => prop.PlayerStates);

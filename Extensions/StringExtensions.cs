@@ -1,6 +1,6 @@
+using Connect4.Models;
 using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace Connect4.Extensions
 {
@@ -20,28 +20,30 @@ namespace Connect4.Extensions
             return newInts;
         }
 
-        public static string ToHexString(this string str)
+        public static string PlayerColorName(this PlayerColor playerColor, bool uppercase = false)
         {
-            StringBuilder sb = new StringBuilder();
-
-            byte[] bytes = Encoding.Unicode.GetBytes(str);
-            foreach (byte t in bytes)
+            if (uppercase)
             {
-                sb.Append(t.ToString("X2"));
+                return playerColor switch
+                {
+                    PlayerColor.White => "White",
+                    PlayerColor.Black => "Black",
+                    PlayerColor.Grey => "Grey",
+                    PlayerColor.Red => "Red",
+                    _ => "",
+                };
             }
-
-            return sb.ToString(); // returns: "48656C6C6F20776F726C64" for "Hello world"
-        }
-
-        public static string FromHexString(this string hexString)
-        {
-            byte[] bytes = new byte[hexString.Length / 2];
-            for (int i = 0; i < bytes.Length; i++)
+            else
             {
-                bytes[i] = Convert.ToByte(hexString.Substring(i * 2, 2), 16);
+                return playerColor switch
+                {
+                    PlayerColor.White => "white",
+                    PlayerColor.Black => "black",
+                    PlayerColor.Grey => "grey",
+                    PlayerColor.Red => "red",
+                    _ => "",
+                };
             }
-
-            return Encoding.Unicode.GetString(bytes); // returns: "Hello world" for "48656C6C6F20776F726C64"
         }
     }
 }

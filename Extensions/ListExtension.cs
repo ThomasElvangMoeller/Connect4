@@ -36,5 +36,15 @@ namespace Connect4.Extensions
                 list[n] = value;
             }
         }
+
+        public static void Shuffle<T>(this Stack<T> stack) {
+            IList<T> temp = stack.ToList();
+            temp.Shuffle();
+            stack.Clear();
+            foreach (var item in temp)
+            {
+                stack.Push(item);
+            }
+        }
     }
 }
