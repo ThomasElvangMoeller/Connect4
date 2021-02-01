@@ -11,6 +11,7 @@ namespace Connect4.Services
         public static IServiceCollection AddServices(this IServiceCollection serviceDescriptors)
         {
             serviceDescriptors.AddScoped<UserService>();
+            //TODO: add IGameStorage and IUserStorage
 
             return serviceDescriptors;
         }

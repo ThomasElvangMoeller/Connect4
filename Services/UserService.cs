@@ -44,9 +44,14 @@ namespace Connect4.Services
             // return null if user not found
             return null;
         }
-        public ApplicationUser GetById(Guid userId)
+        public ApplicationUser GetUser(Guid userId)
         {
             return _context.Users.FirstOrDefault(q => q.Id == userId);
+        }
+
+        public async Task<ApplicationUser> GetUserAsync(ClaimsPrincipal claimsPrincipal)
+        {
+            return await _userManager.GetUserAsync(claimsPrincipal);
         }
 
         public async Task<UserResult> CreateUserAsync(string username, string password)

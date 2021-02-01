@@ -2,8 +2,6 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.UI;
-using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.SpaServices.AngularCli;
 using Microsoft.EntityFrameworkCore;
 using Connect4.Data;
@@ -54,10 +52,9 @@ namespace Connect4
 
             services.AddControllersWithViews();
             services.AddSignalR();
-            //services.AddSingleton<IUserIdProvider, UsernameIdProvider>();
             services.AddRazorPages();
 
-            services.AddServices();
+            services.AddServices(); // custom services added here, see Services/ServicesConfiguration.cs
 
             // In production, the Angular files will be served from this directory
             services.AddSpaStaticFiles(configuration =>

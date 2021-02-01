@@ -1,15 +1,17 @@
 ﻿using Connect4.Extensions;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 
 namespace Connect4.Models
 {
+    /// <summary>
+    /// Created after the lobby. After the "host" presses start, the game is created with the given players.
+    /// Game is currently missing functionality for removing players midgame.
+    /// Adding players midgame will not be supported
+    /// </summary>
     public class Game
     {
-        [Key, DatabaseGenerated(DatabaseGeneratedOption.None)]
         public Guid Id { get; set; }
 
         public PlayerGameState[] Players { get; set; } = new PlayerGameState[4];
@@ -40,8 +42,7 @@ namespace Connect4.Models
 
         private int gameBoardLengthX;
         private int gameBoardLengthY;
-
-        public Game() { }
+        private Dictionary<int, TileIndex> TileValueIndex;
 
         public Game(GameSettings settings, Dictionary<string, PlayerColor> playersAndColors)
         {
@@ -72,10 +73,10 @@ namespace Connect4.Models
         /// <remarks>Throws an exception if the given indexes are outside the board</remarks>
         public bool PlacePieceIndex(PlayerGameState player, int boardX, int boardY)
         {
-            if (boardX < 0 || this.GameBoard.GetLength(0) <= boardX)
+            if (boardX < 0 || this.gameBoardLengthX <= boardX)
                 throw new IndexOutOfRangeException("X Coord is outside the board");
 
-            if (boardY < 0 || this.GameBoard.GetLength(1) <= boardY)
+            if (boardY < 0 || this.gameBoardLengthY <= boardY)
                 throw new IndexOutOfRangeException("Y Coord is outside the board");
 
             if (player != null)
@@ -101,10 +102,10 @@ namespace Connect4.Models
         /// <remarks>Throws an exception if the given indexes are outside the board</remarks>
         public bool PlacePieceFromBoardIndex(PlayerGameState player, int boardPlaceX, int boardPlaceY, int boardTakeX, int boardTakeY)
         {
-            if (boardTakeX < 0 || this.GameBoard.GetLength(0) <= boardTakeX)
+            if (boardTakeX < 0 || this.gameBoardLengthX <= boardTakeX)
                 throw new IndexOutOfRangeException("X Coord is outside the board");
 
-            if (boardTakeY < 0 || this.GameBoard.GetLength(1) <= boardTakeY)
+            if (boardTakeY < 0 || this.gameBoardLengthY <= boardTakeY)
                 throw new IndexOutOfRangeException("Y Coord is outside the board");
 
             if (player != null && this.GameBoard[boardTakeX, boardTakeY].PlayerPresence.ContainsKey(player.Player))
@@ -127,8 +128,8 @@ namespace Connect4.Models
         /// <returns>A bool indicating if it was successful</returns>
         public bool PlacePieceTileValue(PlayerGameState player, int tileValue)
         {
-            if (TryFindTileValueIndex(tileValue, out int x, out int y))
-                return PlacePieceIndex(player, x, y);
+            if (TryFindTileValueIndex(tileValue, out TileIndex index))
+                return PlacePieceIndex(player, index.x, index.y);
             return false;
         }
 
@@ -144,11 +145,11 @@ namespace Connect4.Models
         public bool PlacePieceFromBoardTileValue(PlayerGameState player, int tileValuePlace, int tileValueTake)
         {
             //int takeI = -1, takeJ = -1;
-            if (TryFindTileValueIndex(tileValueTake, out int takeI, out int takeJ))
+            if (TryFindTileValueIndex(tileValueTake, out TileIndex index1))
             {
-                if (TryFindTileValueIndex(tileValuePlace, out int i, out int j))
+                if (TryFindTileValueIndex(tileValuePlace, out TileIndex index2))
                 {
-                    return PlacePieceFromBoardIndex(player, i, j, takeI, takeJ);
+                    return PlacePieceFromBoardIndex(player, index2.x, index2.y, index1.x, index1.y);
                 }
 
             }
@@ -243,9 +244,9 @@ namespace Connect4.Models
             {
                 foreach (int card in state.GetAllCardSums())
                 {
-                    if (TryFindTileValueIndex(card, out int x, out int y))
+                    if (TryFindTileValueIndex(card, out TileIndex index))
                     {
-                        possiblePlays.Add(new Tile(x, y, card));
+                        possiblePlays.Add(new Tile(index.x, index.y, card));
                     }
                 }
             }
@@ -253,20 +254,14 @@ namespace Connect4.Models
         }
 
 
-        public bool TryFindTileValueIndex(int tileValue, out int x, out int y)
+        public bool TryFindTileValueIndex(int tileValue, out TileIndex index)
         {
-            for (int i = 0; i < gameBoardLengthX; i++)
-                for (int j = 0; j < gameBoardLengthY; j++)
-                {
-                    if (this.GameBoard[i, j].TileValue == tileValue)
-                    {
-                        x = i;
-                        y = j;
-                        return true;
-                    }
-                }
-            x = -1;
-            y = -1;
+            if (tileValue > 0 && tileValue <= gameBoardLengthX * gameBoardLengthY)
+            {
+                index = TileValueIndex[tileValue];
+                return true;
+            }
+            index = TileIndex.Zero;
             return false;
         }
 
@@ -274,7 +269,7 @@ namespace Connect4.Models
         // ---------------------------------------------- Private Methods ----------------------------------------------
 
         /// <summary>
-        /// Draws the last cards from the drawpile and adds them to a list
+        /// Draws the top cards from the drawpile and adds them to a list
         /// <para>Amount drawn are dependent on <paramref name="handSize"/></para>
         /// </summary>
         /// <param name="handSize"></param>
@@ -302,6 +297,7 @@ namespace Connect4.Models
         private void CreateBoard(int width, int height, int seed = -1)
         {
             GameBoard = new BoardTile[width, height];
+            TileValueIndex = new Dictionary<int, TileIndex>();
             List<int> tileValues = Enumerable.Range(1, width * height).ToList();
             if (seed > 0)
             {
@@ -315,7 +311,9 @@ namespace Connect4.Models
             for (int i = 0; i < gameBoardLengthX; i++)
                 for (int j = 0; j < gameBoardLengthY; j++)
                 {
-                    GameBoard[i, j] = new BoardTile() { TileValue = removeValues.Dequeue() };
+                    int tile = removeValues.Dequeue();
+                    GameBoard[i, j] = new BoardTile() { TileValue = tile };
+                    TileValueIndex.Add(tile, new TileIndex() { x = i, y = j });
                 }
 
         }
@@ -324,5 +322,12 @@ namespace Connect4.Models
     public class DrawPileRefillEventArgs : EventArgs
     {
         public Stack<int> DrawPile { get; set; }
+    }
+
+    public struct TileIndex
+    {
+        public int x, y;
+
+        public static TileIndex Zero = new TileIndex() { x = 0, y = 0 };
     }
 }
