@@ -9,5 +9,7 @@ namespace Connect4.Services
     public interface IUserStorage
     {
         public Task<ApplicationUser> GetUserAsync(Guid id);
+        
+        public List<ApplicationUser> Users { get; set; }
     }
 }

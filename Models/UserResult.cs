@@ -10,5 +10,11 @@ namespace Connect4.Models
         public ApplicationUser User { get; set; }
         public bool Succeded { get { return User != null; } }
         public string Error { get; set; }
+
+        public UserResult(ApplicationUser user = null, string error = null)
+        {
+            this.User = user;
+            this.Error = error;
+        }
     }
 }

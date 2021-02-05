@@ -18,19 +18,19 @@ namespace Connect4.Services
     public class UserService
     {
         private readonly AppSettings _appSettings;
-        private readonly ApplicationDbContext _context;
+        private readonly IUserStorage _userContext;
         private readonly UserManager<ApplicationUser> _userManager;
 
-        public UserService(IOptions<AppSettings> appSettings, ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+        public UserService(IOptions<AppSettings> appSettings, IUserStorage context, UserManager<ApplicationUser> userManager)
         {
             _appSettings = appSettings.Value;
-            _context = context;
+            _userContext = context;
             _userManager = userManager;
         }
 
         public async Task<UserResponse> AuthenticateAsync(UserRequest model)
         {
-            ApplicationUser user = _context.Users.SingleOrDefault(q => q.UserName == model.Username);
+            ApplicationUser user = _userContext.Users.SingleOrDefault(q => q.UserName == model.Username);
             if(user != null)
             {
                 if( await _userManager.CheckPasswordAsync(user, model.Password))
@@ -46,7 +46,7 @@ namespace Connect4.Services
         }
         public ApplicationUser GetUser(Guid userId)
         {
-            return _context.Users.FirstOrDefault(q => q.Id == userId);
+            return _userContext.Users.FirstOrDefault(q => q.Id == userId);
         }
 
         public async Task<ApplicationUser> GetUserAsync(ClaimsPrincipal claimsPrincipal)
@@ -56,18 +56,18 @@ namespace Connect4.Services
 
         public async Task<UserResult> CreateUserAsync(string username, string password)
         {
-            if (string.IsNullOrWhiteSpace(password)) return new UserResult() { Error = "Password is required" };
-            if (_context.Users.Any(q => q.UserName == username)) return new UserResult() {Error = $"Could not create user. Username '{username}' is already taken" };
+            if (string.IsNullOrWhiteSpace(password)) return new UserResult(error: "Password is required" );
+            if (_userContext.Users.Any(q => q.UserName == username)) return new UserResult(error: $"Could not create user. Username '{username}' is already taken" );
             ApplicationUser user = new ApplicationUser() { UserName = username };
             IdentityResult result = await _userManager.CreateAsync(user, password);
             if (result.Succeeded)
             {
-                ApplicationUser resultUser = _context.Users.SingleOrDefault(q => q.UserName == username);
-                return new UserResult() { User = resultUser };
+                ApplicationUser resultUser = _userContext.Users.SingleOrDefault(q => q.UserName == username);
+                return new UserResult(user: resultUser);
             }
             else
             {
-                return new UserResult() { Error = result.Errors.First().Description }; //TODO: Refactor this, is bad
+                return new UserResult(error: result.Errors.First().Description); //TODO: Refactor this, is bad
             }
         }
 
