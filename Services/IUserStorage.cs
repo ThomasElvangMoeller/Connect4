@@ -10,6 +10,6 @@ namespace Connect4.Services
     {
         public Task<ApplicationUser> GetUserAsync(Guid id);
         
-        public List<ApplicationUser> Users { get; set; }
+        public List<ApplicationUser> Users { get; }
     }
 }

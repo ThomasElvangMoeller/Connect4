@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Connect4.Data;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,6 +12,8 @@ namespace Connect4.Services
         public static IServiceCollection AddServices(this IServiceCollection serviceDescriptors)
         {
             serviceDescriptors.AddScoped<UserService>();
+            serviceDescriptors.AddScoped<IUserStorage, UserStorage>(); //The dbContext inside the UserStorage is already singleton, so UserStorage doesn't need to be singleton as it just transforms the data
+            serviceDescriptors.AddScoped<IGameStorage, GameStorage>();
             //TODO: add IGameStorage and IUserStorage
 
             return serviceDescriptors;
