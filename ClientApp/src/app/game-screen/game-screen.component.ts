@@ -14,6 +14,14 @@ export class GameScreenComponent implements OnInit {
    public screen: Two;
 
    constructor() {
+      this.createBoard();
+   }
+
+   ngOnInit() {
+      //console.log(this.table);
+   }
+
+   private createBoard() {
       let linearValues: number[] = [];
       for (let i = 1; i < 37; i++) linearValues[i] = i;
       linearValues = shuffle(linearValues);
@@ -31,10 +39,6 @@ export class GameScreenComponent implements OnInit {
       }
       // console.log(linearValues);
       // console.log(this.table);
-   }
-
-   ngOnInit() {
-      //console.log(this.table);
    }
 
    ngAfterViewInit(): void {

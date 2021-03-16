@@ -1,8 +1,22 @@
-<div>
-    <h1>Greetings! Welcome to Connect4!</h1>
-    <p>
-        This game is played with 2-4 people.
-        At the start of the game you recieve 4 cards.
-        You use these cards to play your pieces
-    </p>
+<div class="main-screen">
+   <div class="login" *ngIf="hasUser; else User">
+      <h1>Greetings! Welcome to Connect4!</h1>
+      <form [formGroup]="nameForm" (ngSubmit)="submit()">
+         <input class="form-control" [disabled]="validating" type="text" placeholder="Enter Name" />
+         <button class="btn btn-primary" id="nameInputSubmit" type="submit">
+            <span *ngIf="validating; else submitEnter" class="spinner-border"> </span>
+            <span #submitEnter>Enter</span>
+         </button>
+      </form>
+      <p>
+         This game is played with 2-4 people. At the start of the game you recieve 4 cards. You use these cards to play
+         your pieces. Explain the rules here
+      </p>
+   </div>
+   <div class="user container" #User>
+      <div class="row">
+         <div class="col-6">main game screen here</div>
+         <div class="col">chat window here</div>
+      </div>
+   </div>
 </div>
