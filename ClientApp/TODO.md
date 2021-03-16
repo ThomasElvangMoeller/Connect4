@@ -1,4 +1,4 @@
--  [*] Find some kind of 2d rendering for the game board
+-  [x] Find some kind of 2d rendering for the game board
 -  [ ] Create the board from a json response from the server, start with a dummy json if neccessary
 -  [ ] Create a lobby system
 -  [ ] Connect to server SignalR
