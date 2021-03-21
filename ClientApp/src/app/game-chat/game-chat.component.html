@@ -1,1 +1,17 @@
-<p>game-chat works!</p>
+<div>
+   <div class="chat-window h-100">
+      <div class="chat-message row" *ngFor="let item of chatLog">
+         <span class="col">{{ item.timestamp.toLocaleTimeString() }} | {{ item.author }}</span>
+         <div class="w-100"></div>
+         <span class="col">{{ item.message }}</span>
+      </div>
+   </div>
+   <div class="chat-input">
+      <form [formGroup]="chatForm" (ngSubmit)="send()" class="imput-group">
+         <input class="form-control" type="text" placeholder="Enter Message..." formControlName="message" />
+         <div class="input-group-append">
+            <button class="btn btn-primary col-2" type="submit">Send</button>
+         </div>
+      </form>
+   </div>
+</div>

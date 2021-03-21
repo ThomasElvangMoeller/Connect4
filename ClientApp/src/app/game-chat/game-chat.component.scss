@@ -1,0 +1,13 @@
+.chat-window {
+   height: 400px;
+   min-height: 400px;
+   max-height: 400px;
+   overflow-y: scroll;
+}
+
+.chat-message {
+   margin: 2px;
+   padding: 5px;
+   border: 1px black solid;
+   border-radius: 5px;
+}

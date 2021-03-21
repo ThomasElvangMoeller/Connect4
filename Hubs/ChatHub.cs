@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 
 namespace Connect4.Hubs
 {
-    [Authorize]
     public class ChatHub: Hub
     {
         private UserManager<ApplicationUser> _userManager { get; set; }
@@ -18,6 +17,11 @@ namespace Connect4.Hubs
         public ChatHub(UserManager<ApplicationUser> userManager)
         {
             _userManager = userManager;
+        }
+
+        public async Task AddToGroup(string groupName)
+        {
+            await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
         }
 
         /// <summary>
@@ -28,8 +32,8 @@ namespace Connect4.Hubs
         /// <returns></returns>
         public async Task SendMessage(string gameId, string message)
         {
-            
-                await Clients.Group(gameId).SendAsync("recieveMessage", new {Sender = Context.User.Identity.Name, Message = message });
+            //Context.User.Identity.Name can be null, find alternative
+            await Clients.Group(gameId).SendAsync("recieveMessage", new {Sender = Context.User.Identity.Name, Message = message });
             
         }
     }

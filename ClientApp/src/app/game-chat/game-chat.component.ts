@@ -1,4 +1,7 @@
 import { Component, OnInit } from "@angular/core";
+import { FormControl, FormGroup } from "@angular/forms";
+import { Subscription } from "rxjs";
+import { ChatLog, ChatService } from "../chat.service";
 
 @Component({
    selector: "app-game-chat",
@@ -6,7 +9,27 @@ import { Component, OnInit } from "@angular/core";
    styleUrls: ["./game-chat.component.scss"],
 })
 export class GameChatComponent implements OnInit {
-   constructor() {}
+   public chatLog: ChatLog[] = [];
 
-   ngOnInit() {}
+   public chatForm = new FormGroup({
+      message: new FormControl(""),
+   });
+   chatLogSubscription: Subscription; // Is this neccesary to save?
+
+   constructor(private chat: ChatService) {}
+
+   ngOnInit() {
+      this.chatLogSubscription = this.chat.chatLog.subscribe((message) => {
+         this.chatLog.push(message);
+      });
+      this.chat.gameId = "test";
+      this.chat.onConnected((chat) => {
+         chat.joinGroup().then(() => console.log("joined group"));
+      });
+   }
+
+   public send() {
+      this.chat.SendMessage(this.chatForm.controls["message"].value);
+      this.chatForm.setValue({ message: "" });
+   }
 }
