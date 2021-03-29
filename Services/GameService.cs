@@ -47,5 +47,17 @@ namespace Connect4.Services
 
             return game;
         }
+        /// <summary>
+        /// TODO: Fix
+        /// </summary>
+        /// <param name="playerName"></param>
+        /// <returns></returns>
+        public async Task<(bool, string)> ValidatePlayerName(string playerName)
+        {
+            //Check if playername is acceptable. No racism, bigotry, etc. Not longer than "n" characters, no invalid characters
+            return await new Task<(bool,string)>(() => {
+                return (true, string.Empty);
+            });
+        }
     }
 }

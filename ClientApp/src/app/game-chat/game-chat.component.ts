@@ -16,20 +16,20 @@ export class GameChatComponent implements OnInit {
    });
    chatLogSubscription: Subscription; // Is this neccesary to save?
 
-   constructor(private chat: ChatService) {}
+   constructor(private chatService: ChatService) {}
 
    ngOnInit() {
-      this.chatLogSubscription = this.chat.chatLog.subscribe((message) => {
+      this.chatLogSubscription = this.chatService.chatLog.subscribe((message) => {
          this.chatLog.push(message);
       });
-      this.chat.gameId = "test";
-      this.chat.onConnected((chat) => {
+      this.chatService.gameId = "test";
+      this.chatService.onConnected((chat) => {
          chat.joinGroup().then(() => console.log("joined group"));
       });
    }
 
    public send() {
-      this.chat.SendMessage(this.chatForm.controls["message"].value);
+      this.chatService.SendMessage(this.chatForm.controls["message"].value);
       this.chatForm.setValue({ message: "" });
    }
 }

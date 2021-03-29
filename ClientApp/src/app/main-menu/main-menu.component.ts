@@ -1,5 +1,6 @@
 import { Component, OnInit } from "@angular/core";
 import { FormBuilder, FormControl, FormGroup } from "@angular/forms";
+import { UserService } from "../user.service";
 
 @Component({
    selector: "app-main-menu",
@@ -8,8 +9,9 @@ import { FormBuilder, FormControl, FormGroup } from "@angular/forms";
 })
 export class MainMenuComponent implements OnInit {
    public validating: boolean = false;
-   public nameForm: FormControl = new FormControl("");
-   constructor() {}
+   public errorMessage: string | null;
+   public nameForm: FormGroup = new FormGroup({ name: new FormControl("") });
+   constructor(private userService: UserService) {}
 
    ngOnInit() {}
 
@@ -17,11 +19,13 @@ export class MainMenuComponent implements OnInit {
 
    public async submit() {
       this.validating = true;
-      //const response = await this.service.enterName();
-      //if(response.success){
-      //set user
-      //} else {
-      //this.errorMessage = response.error.message;
-      //}
+      const name = this.nameForm.controls["name"].value;
+      const response = await this.userService.validate(name);
+      if (response.valid) {
+         this.userService.setUser({ name, connectionId: null, applicationUserGuid: null });
+         //set user
+      } else {
+         this.errorMessage = response.message;
+      }
    }
 }

@@ -21,7 +21,7 @@ export class BrowserStorageService {
       return null;
    }
 
-   public setObject<T>(key: string, item: T) {
+   public setObject<T>(key: string, item: T): void {
       this.storage.setItem(key, JSON.stringify(item));
    }
 

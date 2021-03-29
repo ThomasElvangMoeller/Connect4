@@ -44,9 +44,9 @@ namespace Connect4.Models
         private int gameBoardLengthY;
         private Dictionary<int, TileIndex> TileValueIndex;
 
-        public Game(GameSettings settings, Dictionary<string, PlayerColor> playersAndColors)
+        public Game(GameSettings settings, Dictionary<string, PlayerColor> playersAndColors, Guid? id = null)
         {
-            this.Id = Guid.NewGuid();
+            this.Id = (id != null) ? id.Value : Guid.NewGuid();
             int seed = string.IsNullOrWhiteSpace(settings.seed) ? -1 : settings.seed.GetHashCode();
             this.CreateBoard(settings.BoardWidth, settings.BoardHeight, seed);
             this.gameBoardLengthX = GameBoard.GetLength(0);

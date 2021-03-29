@@ -13,32 +13,21 @@ namespace Connect4.Models
     {
         public const int MaxPlayers = 4;
         public Guid Id { get; set; }
-        public string[] Players = new string[MaxPlayers]; //max 4 players
-        public int[] PlayerColors = new int[MaxPlayers];
-        public string[] PlayerNames = new string[MaxPlayers];
+        public string Name { get; set; } // Name of the lobby
+        public Player[] Players = new Player[MaxPlayers]; //max 4 players
         public readonly string Password;
 
-        public Lobby(ApplicationUser user = null, string password = null)
+        public Lobby(Player player, string password = null)
         {
-            if (user != null)
-            {
-                Players[0] = user.Id.ToString();
-                PlayerNames[0] = user.UserName;
-            }
-            else
-            {
-                Players[0] = GenerateRandomName();
-                Random random = new Random();
-                PlayerNames[0] = Constants.Animals[random.Next(Constants.Animals.Length)];
-            }
-            PlayerColors = new int[] { -1, -1, -1, -1 };
+            Players[0] = player;
+            Name = string.Concat(Constants.Animals.Rand(), " ", Constants.Animals.Rand(), " ", Constants.Animals.Rand()); // Makes the name 3 random animal name
             Password = password;
             Id = Guid.NewGuid();
         }
 
         /// <param name="user">optional</param>
         /// <returns>The generated playerId, or null if there is no more room</returns>
-        public string AddPlayer(ApplicationUser user = null)
+        public Player AddPlayer(string connectionId, ApplicationUser user)//currently not used until the persistent user system is up
         {
             for (int i = 0; i < Players.Length; i++)
             {
@@ -46,47 +35,49 @@ namespace Connect4.Models
                 {
                     continue;
                 }
-                else if (user != null)
-                {
-                    Players[i] = user.Id.ToString();
-                    PlayerNames[i] = user.UserName;
-                    return Players[i];
-                }
                 else
                 {
-                    Players[i] = GenerateRandomName();
-                    Random random = new Random();
-                    PlayerNames[i] = Constants.Animals[random.Next(Constants.Animals.Length)];
+                    Players[i] = new Player(user.UserName, connectionId, -1, user.Id);
+                    return Players[i];
+                }
+            }
+            return null;
+        }
+        /// <param name="connectionId">Used in Hub context</param>
+        /// <returns>The connectionId of the given player was successfully added, otherwise null</returns>
+        public Player AddPlayer(Player player)
+        {
+            for (int i = 0; i < Players.Length; i++)
+            {
+                if (Players[i] != null)
+                {
+                    continue;
+                }
+                else if (player != null)
+                {
+                    Players[i] = player;
                     return Players[i];
                 }
 
             }
             return null;
         }
-
+        /// <summary>
+        /// Checks if <paramref name="player"/> matches the players connectionId or name
+        /// </summary>
+        /// <param name="player"></param>
+        /// <returns>True if successful</returns>
         public bool RemovePlayer(string player)
         {
             for (int i = 0; i < Players.Length; i++)
             {
-                if (Players[i] == player)
+                if (Players[i].ConnectionId == player || Players[i].Name == player)
                 {
                     Players[i] = null;
                     return true;
                 }
             }
             return false;
-        }
-
-        public void SetPlayerName(string player, string name)
-        {
-            for (int i = 0; i < Players.Length; i++)
-            {
-                if(Players[i] == player)
-                {
-                    PlayerNames[i] = name;
-                    break;
-                }
-            }
         }
 
         const string letters = "abcdefghijklmnopqrstuvwxyz0123456789";
