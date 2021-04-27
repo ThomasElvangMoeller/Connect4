@@ -8,8 +8,8 @@ namespace Connect4.Services
 {
     public interface IGameStorage
     {
-        Task SaveGameAsync(Game game);
+        public Task SaveGameAsync(Game game);
 
-        Task<Game> GetGameAsync(Guid id);
+        public Task<Game> GetGameAsync(Guid id);
     }
 }

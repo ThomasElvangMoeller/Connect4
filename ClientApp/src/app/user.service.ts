@@ -1,5 +1,6 @@
 import { HttpClient } from "@angular/common/http";
 import { Inject, Injectable } from "@angular/core";
+import { User } from "src/models/user";
 import { BrowserStorageService } from "./browser-storage.service";
 import { SessionStorageService } from "./session-storage.service";
 
@@ -59,13 +60,6 @@ export class UserService {
       const sess = this.sessionStorage.getObject<userSession>(USER_STORAGE_TOKEN);
       return { name, connectionId: sess.connectionId, applicationUserGuid: sess.applicationUserGuid };
    }
-}
-
-//might want to rename this
-export interface User {
-   name: string;
-   connectionId: string;
-   applicationUserGuid: string | null;
 }
 
 interface userSession {

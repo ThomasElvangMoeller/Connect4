@@ -43,7 +43,7 @@ namespace Connect4.Data
             //ApplicationUser aka player
             builder.Entity<ApplicationUser>().HasMany<Game>(p => p.CurrentGames);
 
-            /* TODO: Refactor and have the models themselves create ther conversion
+            /* 
             var parameters = new object[] { builder };
             foreach (var entityType in builder.Model.GetEntityTypes())
             {

@@ -23,28 +23,56 @@ namespace Connect4.Models
         public PlayerColor Color { get; set; }
         public List<int> Cards { get; set; }
 
-        public List<int> GetAllCardSums()
+        public PlayerGameState(string player, int playerPieces, PlayerColor color, List<int> cards)
         {
-            sumHolder = new List<int>();
-
-            subsetSum(Cards, 0, Cards.Count - 1, 0);
-
-            return sumHolder;
-
+            Player = player;
+            PlayerPieces = playerPieces;
+            Color = color;
+            Cards = cards;
         }
 
-        private List<int> sumHolder;
-        private void subsetSum(List<int> lst, int left, int right, int sum)
+
+
+        /*
+        public List<int> GetAllCardPlays() // TODO: change the return to a list of objects like: { Tileplay: int, CardCombination: int[] }
         {
-            if(left > right)
+            sumHolder = new List<int>();
+            SubsetSum(Cards, 0, Cards.Count - 1, 0);
+            return sumHolder;
+        }
+        private List<int> sumHolder;
+        private void SubsetSum(List<int> lst, int left, int right, int sum)
+        {
+            if (left > right)
             {
                 sumHolder.Add(sum);
             }
+            SubsetSum(lst, left + 1, right, sum + lst[left]);
+            SubsetSum(lst, left + 1, right, sum);
+        }
+        */
 
-            subsetSum(lst, left + 1, right, sum + lst[left]);
-            
-            subsetSum(lst, left + 1, right, sum);
+        public List<CardPlay> GetAllCardPlays()
+        {
+            List<CardPlay> cardPlays = new List<CardPlay>();
+            int total = 1 << Cards.Count;
 
+            for (int i = 0; i < total; i++)
+            {
+                int sum = 0;
+                List<int> sum_parts = new List<int>();
+
+                for (int j = 0; j < Cards.Count; j++)
+                {
+                    if((i & (1 << j)) != 0)
+                    {
+                        sum += Cards[j];
+                        sum_parts.Add(Cards[j]);
+                    }
+                }
+                cardPlays.Add(new CardPlay(sum, sum_parts.ToArray()));
+            }
+            return cardPlays;
         }
     }
 

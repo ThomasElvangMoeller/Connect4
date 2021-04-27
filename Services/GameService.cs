@@ -12,12 +12,14 @@ namespace Connect4.Services
         private readonly AppSettings _appSettings;
         private readonly IGameStorage _gameStorage;
         private readonly IUserStorage _userStorage;
+        private readonly ILobbyStorage _lobbyStorage;
 
-        public GameService(AppSettings appSettings, IGameStorage gameStorage, IUserStorage userStorage)
+        public GameService(AppSettings appSettings, IGameStorage gameStorage, IUserStorage userStorage, ILobbyStorage lobbyStorage)
         {
             _appSettings = appSettings;
             _gameStorage = gameStorage;
             _userStorage = userStorage;
+            _lobbyStorage = lobbyStorage;
         }
 
 
@@ -26,25 +28,32 @@ namespace Connect4.Services
             return await _gameStorage.GetGameAsync(id);
         }
 
-        public async Task<Game> CreateGame(GameSettings settings, Dictionary<string, PlayerColor> playersAndColors)
+        public async Task<Lobby> GetLobbyAsync(Guid id)
         {
-            Game game = new Game(settings, playersAndColors);
+            return await _lobbyStorage.GetLobbyAsync(id);
+        }
+        public async Task SaveLobbyAsync(Lobby lobby)
+        {
+            await _lobbyStorage.SaveLobbyAsync(lobby);
+        }
 
-            foreach (KeyValuePair<string, PlayerColor> item in playersAndColors)
+        public async Task<Game> CreateGame(GameSettings settings, Player[] players, Guid id)
+        {
+            Game game = new Game(settings, players, id);
+
+            foreach (Player p in players)
             {
                 // We check the keys to see if they match any of the users in the database. If user is null the current player is a guest without an user
-                if (Guid.TryParse(item.Key, out Guid result))
+                if (p.IsAppUser)
                 {
-                    ApplicationUser user = await _userStorage.GetUserAsync(result);
+                    ApplicationUser user = await _userStorage.GetUserAsync(p.ApplicationUserId.Value);
                     if (user != null)
                     {
                         user.CurrentGames.Add(game);
                     }
                 }
             }
-
             await _gameStorage.SaveGameAsync(game);
-
             return game;
         }
         /// <summary>

@@ -16,6 +16,7 @@ namespace Connect4.Models
         public string Name { get; set; } // Name of the lobby
         public Player[] Players = new Player[MaxPlayers]; //max 4 players
         public readonly string Password;
+        public GameSettings GameSettings { get; set; }
 
         public Lobby(Player player, string password = null)
         {
@@ -23,6 +24,7 @@ namespace Connect4.Models
             Name = string.Concat(Constants.Animals.Rand(), " ", Constants.Animals.Rand(), " ", Constants.Animals.Rand()); // Makes the name 3 random animal name
             Password = password;
             Id = Guid.NewGuid();
+            GameSettings = new GameSettings();
         }
 
         /// <param name="user">optional</param>

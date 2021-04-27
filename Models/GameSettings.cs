@@ -10,9 +10,9 @@ namespace Connect4.Models
     /// </summary>
     public class GameSettings
     {
-        public int BoardWidth = 6;
-        public int BoardHeight = 6;
-        public Stack<int> Cards = new Stack<int>(new List<int>() {
+        public int BoardWidth { get; set; } = 6;
+        public int BoardHeight { get; set; } = 6;
+        public Stack<int> Cards { get; set; } = new Stack<int>(new List<int>() {
             1,1,1,1,1,
             2,2,2,2,2,
             3,3,3,3,3,
@@ -34,8 +34,8 @@ namespace Connect4.Models
             19,19,19,
             20,20,20
         });
-        public int PlayerPiecesAmount = 20;
-        public int PlayerCardHoldAmount = 4;
-        public string seed = "default";
+        public int PlayerPiecesAmount { get; set; } = 20;
+        public int PlayerCardHoldAmount { get; set; } = 4;
+        public string seed { get; set; }  = "default";
     }
 }

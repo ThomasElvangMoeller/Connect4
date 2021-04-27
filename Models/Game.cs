@@ -44,9 +44,16 @@ namespace Connect4.Models
         private int gameBoardLengthY;
         private Dictionary<int, TileIndex> TileValueIndex;
 
-        public Game(GameSettings settings, Dictionary<string, PlayerColor> playersAndColors, Guid? id = null)
+
+        /// <summary>
+        /// Creates a new Game, if id is not provided, it will generate one.
+        /// </summary>
+        /// <param name="settings"></param>
+        /// <param name="playersAndColors"></param>
+        /// <param name="id"></param>
+        public Game(GameSettings settings, Player[] players, Guid id)
         {
-            this.Id = (id != null) ? id.Value : Guid.NewGuid();
+            this.Id = id;
             int seed = string.IsNullOrWhiteSpace(settings.seed) ? -1 : settings.seed.GetHashCode();
             this.CreateBoard(settings.BoardWidth, settings.BoardHeight, seed);
             this.gameBoardLengthX = GameBoard.GetLength(0);
@@ -54,10 +61,10 @@ namespace Connect4.Models
             this.CardDrawPile = settings.Cards;
             this.CardDrawPile.Shuffle();
             this.CardDiscardPile = new Stack<int>(CardDrawPile.Count + 1);
-            foreach (KeyValuePair<string, PlayerColor> item in playersAndColors)
+            foreach (Player player in players)
             {
-                PlayerGameState state = new PlayerGameState() { Cards = CreateHand(settings.PlayerCardHoldAmount), Color = item.Value, Player = item.Key, PlayerPieces = settings.PlayerPiecesAmount };
-                this.Players[(int)state.Color] = state;
+                PlayerGameState state = new PlayerGameState(player.Name, settings.PlayerPiecesAmount, (PlayerColor)player.PlayerColor, CreateHand(settings.PlayerCardHoldAmount));
+                this.Players[player.PlayerColor] = state;
             }
         }
 
@@ -98,7 +105,7 @@ namespace Connect4.Models
         /// <param name="boardTakeX"></param>
         /// <param name="boardTakeY"></param>
         /// <returns>A bool indicating if it was successful</returns>
-        /// /// <exception cref="IndexOutOfRangeException"></exception>
+        /// <exception cref="IndexOutOfRangeException"></exception>
         /// <remarks>Throws an exception if the given indexes are outside the board</remarks>
         public bool PlacePieceFromBoardIndex(PlayerGameState player, int boardPlaceX, int boardPlaceY, int boardTakeX, int boardTakeY)
         {
@@ -237,16 +244,16 @@ namespace Connect4.Models
         public Tile[] GetPossibleCardPlays(string player)
         {
             // This is a horrible and inefficient method, do not use too often
-            // TODO: See if this can be improved
-            ISet<Tile> possiblePlays = new HashSet<Tile>();
+            // TODONE: See if this can be improved | 27-04-2021 Unsure if improved, but maybe?
+            ISet<TilePlay> possiblePlays = new HashSet<TilePlay>();
             PlayerGameState state = Players.FirstOrDefault(q => q.Player == player);
             if (state != null)
             {
-                foreach (int card in state.GetAllCardSums())
+                foreach (CardPlay card in state.GetAllCardPlays())
                 {
-                    if (TryFindTileValueIndex(card, out TileIndex index))
+                    if (TryFindTileValueIndex(card.TileToPlay, out TileIndex index))
                     {
-                        possiblePlays.Add(new Tile(index.x, index.y, card));
+                        possiblePlays.Add(new TilePlay(index.x, index.y, card.TileToPlay, card.CardsUsed));
                     }
                 }
             }
