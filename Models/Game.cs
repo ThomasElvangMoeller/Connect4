@@ -63,8 +63,7 @@ namespace Connect4.Models
             this.CardDiscardPile = new Stack<int>(CardDrawPile.Count + 1);
             foreach (Player player in players)
             {
-                PlayerGameState state = new PlayerGameState(player.Name, settings.PlayerPiecesAmount, (PlayerColor)player.PlayerColor, CreateHand(settings.PlayerCardHoldAmount));
-                this.Players[player.PlayerColor] = state;
+                this.Players[player.PlayerColor] = new PlayerGameState(player.Name, player.ConnectionId, settings.PlayerPiecesAmount, (PlayerColor)player.PlayerColor, CreateHand(settings.PlayerCardHoldAmount));
             }
         }
 
@@ -168,7 +167,7 @@ namespace Connect4.Models
             return CardDrawPile.Count >= amount;
         }
 
-        public event EventHandler<DrawPileRefillEventArgs> CardDrawPileRefilled;
+        public event EventHandler<DrawPileRefillEventArgs> CardDrawPileRefilled; // TODO remove this, will not work
 
         protected virtual void OnCardDrawPileRefilled(DrawPileRefillEventArgs e)
         {
@@ -241,12 +240,12 @@ namespace Connect4.Models
             return success;
         }
 
-        public Tile[] GetPossibleCardPlays(string player)
+        public TilePlay[] GetPossibleCardPlays(string playerConnectionId)
         {
             // This is a horrible and inefficient method, do not use too often
             // TODONE: See if this can be improved | 27-04-2021 Unsure if improved, but maybe?
             ISet<TilePlay> possiblePlays = new HashSet<TilePlay>();
-            PlayerGameState state = Players.FirstOrDefault(q => q.Player == player);
+            PlayerGameState state = Players.FirstOrDefault(q => q.ConnectionId == playerConnectionId);
             if (state != null)
             {
                 foreach (CardPlay card in state.GetAllCardPlays())

@@ -60,7 +60,7 @@ namespace Connect4.Services
         /// TODO: Fix
         /// </summary>
         /// <param name="playerName"></param>
-        /// <returns></returns>
+        /// <returns>True if valid, else false and with a string with the reason for rejection</returns>
         public async Task<(bool, string)> ValidatePlayerName(string playerName)
         {
             //Check if playername is acceptable. No racism, bigotry, etc. Not longer than "n" characters, no invalid characters

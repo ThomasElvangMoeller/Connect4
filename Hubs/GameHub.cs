@@ -23,6 +23,7 @@ namespace Connect4.Hubs
         private const string SendLobbyToClient = "SendLobby";
         private const string UpdateSettingsResponse = "UpdateSettingsResponse";
         private const string StartGameMethod = "StartGame";
+        private const string PossibleTilePlays = "PossibleTilePlays";
 
         /// <summary>
         /// First argument in the "Connection" line is a Lobby Object, the clients have to check the difference between the lobby they have and the one sent from here to see who joined
@@ -87,17 +88,28 @@ namespace Connect4.Hubs
             if (lobby != null)
             {
 
-                if (!lobby.Players.All(p => p.PlayerColor >= 0 && p.PlayerColor <= 4))
+                if (!lobby.Players.All(p => p.PlayerColor >= 0 && p.PlayerColor <= 3))
                 {
-                    await Clients.Client(Context.ConnectionId).SendAsync(StartGameMethod, false, "Not all players has a color");
+                    await Clients.Client(Context.ConnectionId).SendAsync(StartGameMethod, false, "Not all players have a color");
                 }
                 else
                 {
                     Game game = await _gameService.CreateGame(lobby.GameSettings, lobby.Players, lobbyId);
                     await Clients.Group(lobby.Id.ToString()).SendAsync(StartGameMethod, true, game);
+                    var cardplays = game.Players[game.CurrentPlayerTurnIndex].GetAllCardPlays();
                 }
             }
         }
 
+        public async Task GetPossibleCardPlays(Guid gameId) //TODO add reciever in angular
+        {
+            Game game = await _gameService.GetGameAsync(gameId);
+
+            if(game != null)
+            {
+                var tilePlays = game.GetPossibleCardPlays(Context.ConnectionId);
+                await Clients.Client(Context.ConnectionId).SendAsync(PossibleTilePlays, tilePlays);
+            }
+        }
     }
 }

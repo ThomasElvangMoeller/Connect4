@@ -9,14 +9,14 @@ namespace Connect4.Services
 {
     public static class ServicesConfiguration
     {
-        public static IServiceCollection AddServices(this IServiceCollection serviceDescriptors)
+        public static IServiceCollection AddServices(this IServiceCollection service)
         {
-            serviceDescriptors.AddScoped<UserService>();
-            serviceDescriptors.AddScoped<IUserStorage, UserStorage>(); //The dbContext inside the UserStorage is already singleton, so UserStorage doesn't need to be singleton as it just transforms the data
-            serviceDescriptors.AddScoped<IGameStorage, GameStorage>();
+            service.AddScoped<UserService>();
+            service.AddScoped<IUserStorage, UserStorage>(); //The dbContext inside the UserStorage is already singleton, so UserStorage doesn't need to be singleton as it just transforms the data
+            service.AddScoped<IGameStorage, GameStorage>();
             //TODO: add IGameStorage and IUserStorage
 
-            return serviceDescriptors;
+            return service;
         }
     }
 }

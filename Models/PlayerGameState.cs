@@ -16,16 +16,17 @@ namespace Connect4.Models
         /// If player is an <see cref="ApplicationUser"/>, this field will be the Guid Id of that user.
         /// <para>Player is also the key to the dictionary holding the <see cref="PlayerGameState"/></para>
         /// </summary>
-        public string Player { get; set; }
+        public string Player { get; private set; }
+        public string ConnectionId { get; private set; }
         //public Game Game { get; set; } Not needed if it does not have it's own db table
         public int PlayerPieces { get; set; }
-        [JsonConverter(typeof(StringEnumConverter))]
         public PlayerColor Color { get; set; }
         public List<int> Cards { get; set; }
 
-        public PlayerGameState(string player, int playerPieces, PlayerColor color, List<int> cards)
+        public PlayerGameState(string player, string connectionId, int playerPieces, PlayerColor color, List<int> cards)
         {
             Player = player;
+            ConnectionId = connectionId;
             PlayerPieces = playerPieces;
             Color = color;
             Cards = cards;

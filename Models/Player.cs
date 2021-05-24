@@ -11,7 +11,7 @@ namespace Connect4.Models
         public string ConnectionId { get; set; }
         public int PlayerColor { get; set; }
         public Guid? ApplicationUserId { get; set; }
-        public bool IsAppUser => ApplicationUserId != null;
+        public bool IsAppUser => ApplicationUserId.HasValue;
 
         public Player(string name, string connectionId, int playerColor, Guid? applicationUserId = null)
         {

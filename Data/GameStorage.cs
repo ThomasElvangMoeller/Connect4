@@ -24,9 +24,18 @@ namespace Connect4.Data
 
         public Task SaveGameAsync(Game game)
         {
-            return Task.Run(() =>
+            return Task.Run(async () =>
             {
-                //TODO actually save game
+                var storageGame = _context.Games.FirstOrDefault(g => g.Id == game.Id);
+                if(storageGame != null)
+                {
+                    storageGame = game;
+                }
+                else
+                {
+                    await _context.AddAsync(game);
+                }
+                await _context.SaveChangesAsync();
             });
         }
     }

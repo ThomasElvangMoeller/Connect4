@@ -1,5 +1,6 @@
-import { AfterViewInit, Component, ElementRef, OnInit, ViewChild } from "@angular/core";
+import { Component, ElementRef, OnInit, ViewChild } from "@angular/core";
 import Two from "two.js";
+import { GameService } from "../game.service";
 
 @Component({
    selector: "app-game-screen",
@@ -9,36 +10,16 @@ import Two from "two.js";
 export class GameScreenComponent implements OnInit {
    @ViewChild("gameCanvas", { static: false })
    private canvas: ElementRef<HTMLDivElement>;
-   public table: number[][];
+   //public table: number[][];
 
    public screen: Two;
 
-   constructor() {
-      this.createBoard();
+   constructor(private gameService: GameService) {
+      //this.createBoard();
    }
 
    ngOnInit() {
       //console.log(this.table);
-   }
-
-   private createBoard() {
-      let linearValues: number[] = [];
-      for (let i = 1; i < 37; i++) linearValues[i] = i;
-      linearValues = shuffle(linearValues);
-      this.table = new Array<number[]>();
-      this.table.length = 6;
-      for (let i = 0; i < this.table.length; i++) {
-         this.table[i] = [];
-         this.table[i].length = 6;
-         for (let j = 0; j < this.table[i].length; j++) {
-            this.table[i][j] = linearValues.pop();
-            if (typeof this.table[i][j] == "undefined") {
-               this.table[i][j] = linearValues.pop(); //an undefined has snuck in somehow, I suspect shuffle is the perpetrator
-            }
-         }
-      }
-      // console.log(linearValues);
-      // console.log(this.table);
    }
 
    ngAfterViewInit(): void {
@@ -53,11 +34,11 @@ export class GameScreenComponent implements OnInit {
       rect.noStroke();
       this.screen.update();
 */
-      if (this.table) {
-         const tileWidth = Math.min(this.screen.width, this.screen.height) / this.table.length;
-         for (let i = 0; i < this.table.length; i++) {
-            for (let j = 0; j < this.table[i].length; j++) {
-               const num = this.table[i][j];
+      if (this.gameService.game) {
+         const tileWidth = Math.min(this.screen.width, this.screen.height) / this.gameService.game.gameBoard.length;
+         for (let i = 0; i < this.gameService.game.gameBoard.length; i++) {
+            for (let j = 0; j < this.gameService.game.gameBoard[i].length; j++) {
+               const num = this.gameService.game.gameBoard[i][j].tileValue;
                makeTile(this.screen, i * tileWidth, j * tileWidth, tileWidth, tileWidth, num.toString());
             }
          }
@@ -68,20 +49,6 @@ export class GameScreenComponent implements OnInit {
       this.screen.update();
       console.log("Game Board Initialized");
    }
-}
-
-function shuffle<T>(array: T[]): T[] {
-   let tmp: T,
-      current: number,
-      top: number = array.length;
-   if (top)
-      while (--top) {
-         current = Math.floor(Math.random() * (top + 1));
-         tmp = array[current];
-         array[current] = array[top];
-         array[top] = tmp;
-      }
-   return array;
 }
 
 //TODO refactor, this makes a single tile
